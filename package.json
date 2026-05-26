@@ -1,7 +1,7 @@
 {
   "name": "@stackra/nestjs-queue",
   "version": "1.0.0",
-  "description": "NestJS queue \u2014 bridges @nestjs/bullmq into @stackra/ts-queue. BullMQ-flavored QueueService + IQueueConnection adapter for cross-stack dispatch.",
+  "description": "NestJS queue — bridges @nestjs/bullmq into @stackra/ts-queue. BullMQ-flavored QueueService + IQueueConnection adapter for cross-stack dispatch.",
   "license": "MIT",
   "author": {
     "name": "Stackra L.L.C",
@@ -38,13 +38,12 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
-  "dependencies": {
-    "@nestjs/bullmq": "^11.0.2",
-    "bullmq": "^5.34.0"
-  },
+  "dependencies": {},
   "peerDependencies": {
+    "@nestjs/bullmq": "^11.0.0",
     "@nestjs/common": "^11.0.0",
-    "@nestjs/core": "^11.0.0"
+    "@nestjs/core": "^11.0.0",
+    "bullmq": "^5.0.0"
   },
   "devDependencies": {
     "@nestjs/common": "^11.0.1",
