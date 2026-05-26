@@ -99,6 +99,7 @@ export class QueueModule {
       module: QueueModule,
       global: true,
       imports: [
+        DiscoveryModule,
         ...((options.imports ?? []) as DynamicModule[]),
         BullModule.forRootAsync({
           imports: (options.imports ?? []) as never,
