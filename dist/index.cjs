@@ -1,6 +1,7 @@
 'use strict';
 
 var common = require('@nestjs/common');
+var core = require('@nestjs/core');
 var bullmq = require('@nestjs/bullmq');
 var bullmq$1 = require('bullmq');
 var contracts = require('@stackra/contracts');
@@ -306,14 +307,14 @@ var DEFAULT_JOB_OPTIONS = {
 exports.QueueService = class QueueService {
   /**
    * @param moduleRef - NestJS `ModuleRef` for token-based lookup.
-   * @param modulesContainer - NestJS `ModulesContainer` for cross-module lookup.
+   * @param discovery - NestJS `DiscoveryService` for cross-module lookup.
    */
-  constructor(moduleRef, modulesContainer) {
+  constructor(moduleRef, discovery) {
     this.moduleRef = moduleRef;
-    this.modulesContainer = modulesContainer;
+    this.discovery = discovery;
   }
   moduleRef;
-  modulesContainer;
+  discovery;
   /** Scoped logger. */
   logger = new common.Logger(exports.QueueService.name);
   /** Cached `Queue` instances keyed by name. */
@@ -444,16 +445,12 @@ exports.QueueService = class QueueService {
       return queue;
     } catch {
     }
-    for (const moduleRef of this.modulesContainer.values()) {
-      try {
-        const provider = moduleRef.providers.get(token);
-        if (provider?.instance) {
-          queue = provider.instance;
-          this.queues.set(name, queue);
-          return queue;
-        }
-      } catch {
-        continue;
+    const providers = this.discovery.getProviders();
+    for (const wrapper of providers) {
+      if (wrapper.token === token && wrapper.instance) {
+        queue = wrapper.instance;
+        this.queues.set(name, queue);
+        return queue;
       }
     }
     throw new Error(
@@ -495,7 +492,7 @@ exports.QueueModule = class QueueModule {
     return {
       module: exports.QueueModule,
       global: true,
-      imports: [bullmq.BullModule.forRoot(options)],
+      imports: [core.DiscoveryModule, bullmq.BullModule.forRoot(options)],
       providers: [
         { provide: NESTJS_QUEUE_MODULE_OPTIONS, useValue: options },
         exports.QueueService,

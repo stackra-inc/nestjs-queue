@@ -1,4 +1,5 @@
 import { Injectable, Module, Logger } from '@nestjs/common';
+import { DiscoveryModule } from '@nestjs/core';
 import { getQueueToken, BullModule } from '@nestjs/bullmq';
 export { InjectQueue, OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Queue, QueueEvents, FlowProducer } from 'bullmq';
@@ -306,14 +307,14 @@ var DEFAULT_JOB_OPTIONS = {
 var QueueService = class {
   /**
    * @param moduleRef - NestJS `ModuleRef` for token-based lookup.
-   * @param modulesContainer - NestJS `ModulesContainer` for cross-module lookup.
+   * @param discovery - NestJS `DiscoveryService` for cross-module lookup.
    */
-  constructor(moduleRef, modulesContainer) {
+  constructor(moduleRef, discovery) {
     this.moduleRef = moduleRef;
-    this.modulesContainer = modulesContainer;
+    this.discovery = discovery;
   }
   moduleRef;
-  modulesContainer;
+  discovery;
   /** Scoped logger. */
   logger = new Logger(QueueService.name);
   /** Cached `Queue` instances keyed by name. */
@@ -444,16 +445,12 @@ var QueueService = class {
       return queue;
     } catch {
     }
-    for (const moduleRef of this.modulesContainer.values()) {
-      try {
-        const provider = moduleRef.providers.get(token);
-        if (provider?.instance) {
-          queue = provider.instance;
-          this.queues.set(name, queue);
-          return queue;
-        }
-      } catch {
-        continue;
+    const providers = this.discovery.getProviders();
+    for (const wrapper of providers) {
+      if (wrapper.token === token && wrapper.instance) {
+        queue = wrapper.instance;
+        this.queues.set(name, queue);
+        return queue;
       }
     }
     throw new Error(
@@ -495,7 +492,7 @@ var QueueModule = class {
     return {
       module: QueueModule,
       global: true,
-      imports: [BullModule.forRoot(options)],
+      imports: [DiscoveryModule, BullModule.forRoot(options)],
       providers: [
         { provide: NESTJS_QUEUE_MODULE_OPTIONS, useValue: options },
         QueueService,

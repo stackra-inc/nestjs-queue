@@ -12,8 +12,8 @@
  * @module @stackra/nestjs-queue/services/queue.service
  */
 
-import { Inject, Injectable, Logger } from '@nestjs/common';
-import { ModuleRef, ModulesContainer } from '@nestjs/core';
+import { Injectable, Logger } from '@nestjs/common';
+import { DiscoveryService, ModuleRef } from '@nestjs/core';
 import { getQueueToken } from '@nestjs/bullmq';
 import { FlowProducer, type FlowJob, type JobsOptions, type Queue } from 'bullmq';
 
@@ -46,11 +46,11 @@ export class QueueService {
 
   /**
    * @param moduleRef - NestJS `ModuleRef` for token-based lookup.
-   * @param modulesContainer - NestJS `ModulesContainer` for cross-module lookup.
+   * @param discovery - NestJS `DiscoveryService` for cross-module lookup.
    */
   public constructor(
     private readonly moduleRef: ModuleRef,
-    private readonly modulesContainer: ModulesContainer
+    private readonly discovery: DiscoveryService
   ) {}
 
   // ────────────────────────────────────────────────────────────────────
@@ -220,17 +220,13 @@ export class QueueService {
       // Fall through to cross-module search
     }
 
-    // Walk all modules to find the queue token
-    for (const moduleRef of this.modulesContainer.values()) {
-      try {
-        const provider = moduleRef.providers.get(token);
-        if (provider?.instance) {
-          queue = provider.instance as Queue;
-          this.queues.set(name, queue);
-          return queue;
-        }
-      } catch {
-        continue;
+    // Walk all providers via DiscoveryService to find the queue
+    const providers = this.discovery.getProviders();
+    for (const wrapper of providers) {
+      if (wrapper.token === token && wrapper.instance) {
+        queue = wrapper.instance as Queue;
+        this.queues.set(name, queue);
+        return queue;
       }
     }
 

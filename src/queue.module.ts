@@ -21,6 +21,7 @@
  */
 
 import { type DynamicModule, Module } from '@nestjs/common';
+import { DiscoveryModule } from '@nestjs/core';
 import { BullModule } from '@nestjs/bullmq';
 
 import { BullMQConnector } from '@/connectors/bullmq.connector';
@@ -77,7 +78,7 @@ export class QueueModule {
     return {
       module: QueueModule,
       global: true,
-      imports: [BullModule.forRoot(options)],
+      imports: [DiscoveryModule, BullModule.forRoot(options)],
       providers: [
         { provide: NESTJS_QUEUE_MODULE_OPTIONS, useValue: options },
         QueueService,
