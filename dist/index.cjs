@@ -14,6 +14,7 @@ var __decorateClass = (decorators, target, key, kind) => {
       result = (decorator(result)) || result;
   return result;
 };
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
 var BullMQConnection = class _BullMQConnection {
   /**
    * @param name              - Connection name from queue config.
@@ -459,7 +460,8 @@ exports.QueueService = class QueueService {
   }
 };
 exports.QueueService = __decorateClass([
-  common.Injectable()
+  common.Injectable(),
+  __decorateParam(1, Inject(core.DiscoveryService))
 ], exports.QueueService);
 
 // src/queue.module.ts
@@ -512,6 +514,7 @@ exports.QueueModule = class QueueModule {
       module: exports.QueueModule,
       global: true,
       imports: [
+        core.DiscoveryModule,
         ...options.imports ?? [],
         bullmq.BullModule.forRootAsync({
           imports: options.imports ?? [],

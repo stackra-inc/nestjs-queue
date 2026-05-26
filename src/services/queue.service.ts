@@ -50,7 +50,7 @@ export class QueueService {
    */
   public constructor(
     private readonly moduleRef: ModuleRef,
-    private readonly discovery: DiscoveryService
+    @Inject(DiscoveryService) private readonly discovery: DiscoveryService
   ) {}
 
   // ────────────────────────────────────────────────────────────────────

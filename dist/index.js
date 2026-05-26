@@ -1,5 +1,5 @@
 import { Injectable, Module, Logger } from '@nestjs/common';
-import { DiscoveryModule } from '@nestjs/core';
+import { DiscoveryService, DiscoveryModule } from '@nestjs/core';
 import { getQueueToken, BullModule } from '@nestjs/bullmq';
 export { InjectQueue, OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Queue, QueueEvents, FlowProducer } from 'bullmq';
@@ -14,6 +14,7 @@ var __decorateClass = (decorators, target, key, kind) => {
       result = (decorator(result)) || result;
   return result;
 };
+var __decorateParam = (index, decorator) => (target, key) => decorator(target, key, index);
 var BullMQConnection = class _BullMQConnection {
   /**
    * @param name              - Connection name from queue config.
@@ -459,7 +460,8 @@ var QueueService = class {
   }
 };
 QueueService = __decorateClass([
-  Injectable()
+  Injectable(),
+  __decorateParam(1, Inject(DiscoveryService))
 ], QueueService);
 
 // src/queue.module.ts
@@ -512,6 +514,7 @@ var QueueModule = class {
       module: QueueModule,
       global: true,
       imports: [
+        DiscoveryModule,
         ...options.imports ?? [],
         BullModule.forRootAsync({
           imports: options.imports ?? [],
