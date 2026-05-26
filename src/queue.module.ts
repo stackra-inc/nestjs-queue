@@ -142,6 +142,7 @@ export class QueueModule {
 
     return {
       module: QueueModule,
+      global: true,
       imports: [BullModule.registerQueue(...queueConfigs)],
       exports: [BullModule],
     };

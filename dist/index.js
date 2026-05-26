@@ -542,6 +542,7 @@ var QueueModule = class {
     const queueConfigs = queues.map((name) => ({ name }));
     return {
       module: QueueModule,
+      global: true,
       imports: [BullModule.registerQueue(...queueConfigs)],
       exports: [BullModule]
     };
