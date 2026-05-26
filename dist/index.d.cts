@@ -1,7 +1,7 @@
 import { DynamicModule } from '@nestjs/common';
 import { BullRootModuleOptions } from '@nestjs/bullmq';
 export { InjectQueue, OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
-import { ModuleRef } from '@nestjs/core';
+import { ModuleRef, ModulesContainer } from '@nestjs/core';
 import { JobsOptions, FlowJob, ConnectionOptions, RedisClient, Queue, QueueEvents } from 'bullmq';
 export { FlowJob, FlowProducer, Job, JobsOptions, Queue } from 'bullmq';
 import { IQueueConnector, QueueConnectionConfig, IQueueConnection, IJobOptions, IQueuedJob, JobStatus } from '@stackra/contracts';
@@ -140,6 +140,7 @@ declare class QueueModule {
  */
 declare class QueueService {
     private readonly moduleRef;
+    private readonly modulesContainer;
     /** Scoped logger. */
     private readonly logger;
     /** Cached `Queue` instances keyed by name. */
@@ -148,8 +149,9 @@ declare class QueueService {
     private flowProducer;
     /**
      * @param moduleRef - NestJS `ModuleRef` for token-based lookup.
+     * @param modulesContainer - NestJS `ModulesContainer` for cross-module lookup.
      */
-    constructor(moduleRef: ModuleRef);
+    constructor(moduleRef: ModuleRef, modulesContainer: ModulesContainer);
     /**
      * Dispatch a job onto a named queue.
      *

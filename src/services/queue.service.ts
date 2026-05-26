@@ -12,8 +12,8 @@
  * @module @stackra/nestjs-queue/services/queue.service
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { ModuleRef } from '@nestjs/core';
+import { Inject, Injectable, Logger } from '@nestjs/common';
+import { ModuleRef, ModulesContainer } from '@nestjs/core';
 import { getQueueToken } from '@nestjs/bullmq';
 import { FlowProducer, type FlowJob, type JobsOptions, type Queue } from 'bullmq';
 
@@ -46,8 +46,12 @@ export class QueueService {
 
   /**
    * @param moduleRef - NestJS `ModuleRef` for token-based lookup.
+   * @param modulesContainer - NestJS `ModulesContainer` for cross-module lookup.
    */
-  public constructor(private readonly moduleRef: ModuleRef) {}
+  public constructor(
+    private readonly moduleRef: ModuleRef,
+    private readonly modulesContainer: ModulesContainer
+  ) {}
 
   // ────────────────────────────────────────────────────────────────────
   // Producer API
@@ -205,16 +209,33 @@ export class QueueService {
     let queue = this.queues.get(name);
     if (queue) return queue;
 
+    const token = getQueueToken(name);
+
+    // First try moduleRef (works if queue is in the same module scope)
     try {
-      const token = getQueueToken(name);
       queue = this.moduleRef.get<Queue>(token, { strict: false });
+      this.queues.set(name, queue);
+      return queue;
     } catch {
-      throw new Error(
-        `Queue "${name}" not found. Register it with QueueModule.forFeature(['${name}']).`
-      );
+      // Fall through to cross-module search
     }
 
-    this.queues.set(name, queue);
-    return queue;
+    // Walk all modules to find the queue token
+    for (const moduleRef of this.modulesContainer.values()) {
+      try {
+        const provider = moduleRef.providers.get(token);
+        if (provider?.instance) {
+          queue = provider.instance as Queue;
+          this.queues.set(name, queue);
+          return queue;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    throw new Error(
+      `Queue "${name}" not found. Register it with QueueModule.forFeature(['${name}']).`
+    );
   }
 }

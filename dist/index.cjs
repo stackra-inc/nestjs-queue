@@ -306,11 +306,14 @@ var DEFAULT_JOB_OPTIONS = {
 exports.QueueService = class QueueService {
   /**
    * @param moduleRef - NestJS `ModuleRef` for token-based lookup.
+   * @param modulesContainer - NestJS `ModulesContainer` for cross-module lookup.
    */
-  constructor(moduleRef) {
+  constructor(moduleRef, modulesContainer) {
     this.moduleRef = moduleRef;
+    this.modulesContainer = modulesContainer;
   }
   moduleRef;
+  modulesContainer;
   /** Scoped logger. */
   logger = new common.Logger(exports.QueueService.name);
   /** Cached `Queue` instances keyed by name. */
@@ -434,16 +437,28 @@ exports.QueueService = class QueueService {
   resolveQueue(name) {
     let queue = this.queues.get(name);
     if (queue) return queue;
+    const token = bullmq.getQueueToken(name);
     try {
-      const token = bullmq.getQueueToken(name);
       queue = this.moduleRef.get(token, { strict: false });
+      this.queues.set(name, queue);
+      return queue;
     } catch {
-      throw new Error(
-        `Queue "${name}" not found. Register it with QueueModule.forFeature(['${name}']).`
-      );
     }
-    this.queues.set(name, queue);
-    return queue;
+    for (const moduleRef of this.modulesContainer.values()) {
+      try {
+        const provider = moduleRef.providers.get(token);
+        if (provider?.instance) {
+          queue = provider.instance;
+          this.queues.set(name, queue);
+          return queue;
+        }
+      } catch {
+        continue;
+      }
+    }
+    throw new Error(
+      `Queue "${name}" not found. Register it with QueueModule.forFeature(['${name}']).`
+    );
   }
 };
 exports.QueueService = __decorateClass([
