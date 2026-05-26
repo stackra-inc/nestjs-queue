@@ -38,22 +38,22 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
   },
+  "dependencies": {
+    "@nestjs/bullmq": "^11.0.2",
+    "bullmq": "^5.34.0"
+  },
   "peerDependencies": {
-    "@nestjs/bullmq": "^11.0.0",
     "@nestjs/common": "^11.0.0",
     "@nestjs/core": "^11.0.0",
-    "bullmq": "^5.0.0",
     "reflect-metadata": "^0.2.2"
   },
   "devDependencies": {
-    "@nestjs/bullmq": "^11.0.2",
     "@nestjs/common": "^11.0.1",
     "@nestjs/core": "^11.0.1",
     "@nestjs/testing": "^11.0.1",
     "@stackra/contracts": "github:stackra-inc/contracts#main",
     "@stackra/tsup-config": "^1.0.12",
     "@types/node": "^25.9.1",
-    "bullmq": "^5.34.0",
     "reflect-metadata": "^0.2.2",
     "tsup": "^8.5.1",
     "typescript": "^6.0.3",
